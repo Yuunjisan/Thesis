@@ -1,0 +1,16 @@
+{
+	"version": "0.3.18", 
+	"suite": "unknown_suite", 
+	"function_id": 18, 
+	"function_name": "Schaffers1000", 
+	"maximization": false, 
+	"algorithm": {"name": "Vanilla BO Instance 4", "info": "Bo-Torch Implementation"},
+	"attributes": ["evaluations", "raw_y", "raw_y_best"],
+	"scenarios": [
+		{"dimension": 2,
+		"path": "data_f18_Schaffers1000/IOHprofiler_f18_DIM2.dat",
+		"runs": [
+			{"instance": 4, "evals": 100, "best": {"evals": 23, "y": 0.9992455357352896, "x": [-4.435075724328596, 2.12620655719841]}}
+		]}
+	]
+}
