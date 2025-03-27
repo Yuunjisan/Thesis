@@ -5,6 +5,8 @@ import torch
 import gpytorch
 from ioh import get_problem, ProblemClass
 import os
+from scipy import stats
+from scipy.stats import qmc
 
 # Create a directory to save plots
 def ensure_dir(directory):
@@ -18,7 +20,7 @@ def ensure_dir(directory):
 plots_dir = ensure_dir("bbob_plots")
 
 # Create the problem
-problem = get_problem(1, 1, 2, problem_class=ProblemClass.BBOB)
+problem = get_problem(20, 1, 2, problem_class=ProblemClass.BBOB)
 
 # Define a function to evaluate the BBOB function
 def evaluate_function(x):
@@ -35,17 +37,23 @@ upper_bound = 5
 
 def generate_dataset(n_samples):
     """
-    Generate a dataset of n_samples points and their function values
+    Generate a dataset of n_samples points and their function values using Sobol sampling
     """
-    # Generate uniform random samples in the domain
-    X = np.random.uniform(lower_bound, upper_bound, size=(n_samples, 2))
+    # Create a Sobol sequence generator for 2D
+    sampler = qmc.Sobol(d=2, scramble=True)
+    
+    # Generate samples in [0, 1]^2
+    samples = sampler.random(n=n_samples)
+    
+    # Scale samples to the domain [lower_bound, upper_bound]^2
+    X = qmc.scale(samples, lower_bound, upper_bound)
     
     # Evaluate function at each point
     y = np.array([evaluate_function(x) for x in X])
     
     return X, y
 
-# First, try a more direct approach to visualize the function
+# Visualize the true function
 def plot_true_function():
     """
     Create a contour plot of the true BBOB function
@@ -83,12 +91,11 @@ class ExactGPModel(gpytorch.models.ExactGP):
     def __init__(self, train_x, train_y, likelihood):
         super(ExactGPModel, self).__init__(train_x, train_y, likelihood)
         
-        # Mean module
-        self.mean_module = gpytorch.means.ConstantMean()
+        self.mean_module = gpytorch.means.LinearMean(input_size=2)
         
         # Covariance module
         self.covar_module = gpytorch.kernels.ScaleKernel(
-            gpytorch.kernels.RBFKernel()
+            gpytorch.kernels.RBFKernel(ard_num_dims=2)
         )
     
     def forward(self, x):
@@ -118,8 +125,14 @@ def train_and_predict_gp(train_X, train_y, grid_X, grid_Y):
     # "Loss" for GP learning is the negative marginal log likelihood
     mll = gpytorch.mlls.ExactMarginalLogLikelihood(likelihood, model)
     
-    # Training loop
-    training_iterations = 100
+    # If using spectral mixture kernel, initialize it
+    if isinstance(model.covar_module.base_kernel, gpytorch.kernels.SpectralMixtureKernel):
+        # Initialize the spectral mixture kernel with data
+        with torch.no_grad():
+            model.covar_module.base_kernel.initialize_from_data(train_X_tensor, train_y_tensor)
+    
+    # Training loop - increase iterations for more complex kernels
+    training_iterations = 200  # Increase from 100 to 200
     for i in range(training_iterations):
         optimizer.zero_grad()
         output = model(train_X_tensor)

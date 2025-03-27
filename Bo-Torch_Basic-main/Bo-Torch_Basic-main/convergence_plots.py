@@ -10,8 +10,8 @@ import pandas as pd
 from pathlib import Path
 
 # Configuration
-problem_id = 18  
-dimension = 2   # 2D function
+problem_id = 1  
+dimension = 10   # 2D function
 instances = range(5)  # Instances 0 to 4
 budget = 100  # Function evaluations per run
 n_DoE = 10    # Initial design of experiments size
@@ -127,54 +127,31 @@ if not all_results:
     print("No results to plot!")
     exit()
 
-# Find the maximum number of evaluations across all runs
-max_evals = max(result[0][-1] for result in all_results)
+# Create individual plots for each instance
+plt.figure(figsize=(12, 8))
 
-# Interpolate all results to have the same evaluation points
-eval_points = np.linspace(1, max_evals, 100)
-interpolated_values = []
-
-for evals, best_so_far in all_results:
-    # Interpolate to get values at common evaluation points
-    interp_values = np.interp(eval_points, evals, best_so_far)
-    interpolated_values.append(interp_values)
-
-# Convert to numpy array for easier calculations
-interpolated_values = np.array(interpolated_values)
-
-# Calculate mean and standard deviation
-mean_values = np.mean(interpolated_values, axis=0)
-std_values = np.std(interpolated_values, axis=0)
-
-# Create the convergence plot
-plt.figure(figsize=(10, 6))
-plt.plot(eval_points, mean_values, 'b-', label='Mean')
-plt.fill_between(eval_points, 
-                mean_values - std_values, 
-                mean_values + std_values, 
-                alpha=0.3, 
-                color='b', 
-                label='±1 std')
+# Plot each instance separately
+for i, (evals, best_so_far) in enumerate(all_results):
+    plt.plot(evals, best_so_far, label=f'Instance {instances[i]}')
 
 plt.xlabel('Function Evaluations')
 plt.ylabel('Best Function Value')
-plt.title(f'Convergence Plot for BBOB Function {problem_id} (Averaged over {len(all_results)} instances)')
+plt.title(f'Convergence Plot for BBOB Function {problem_id} (Individual Instances)')
 plt.grid(True)
 plt.legend()
 
-# Save the plot
-plot_path = os.path.join(results_dir, f"convergence_plot_function_{problem_id}.png")
+# Save the individual plots
+plot_path = os.path.join(results_dir, f"convergence_plot_function_{problem_id}_individual.png")
 plt.savefig(plot_path, dpi=300, bbox_inches='tight')
 plt.show()
 
-print(f"\nConvergence plot saved to {plot_path}")
+print(f"\nIndividual convergence plot saved to {plot_path}")
 
-# Save the raw data
-data_path = os.path.join(results_dir, f"convergence_data_function_{problem_id}.csv")
-pd.DataFrame({
-    'evaluations': eval_points,
-    'mean': mean_values,
-    'std': std_values
-}).to_csv(data_path, index=False)
-
-print(f"Raw data saved to {data_path}") 
+# Save the raw data for each instance
+for i, (evals, best_so_far) in enumerate(all_results):
+    instance_data_path = os.path.join(results_dir, f"convergence_data_function_{problem_id}_instance_{instances[i]}.csv")
+    pd.DataFrame({
+        'evaluations': evals,
+        'best_so_far': best_so_far
+    }).to_csv(instance_data_path, index=False)
+    print(f"Raw data for instance {instances[i]} saved to {instance_data_path}") 
