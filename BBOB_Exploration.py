@@ -20,7 +20,7 @@ def ensure_dir(directory):
 plots_dir = ensure_dir("bbob_plots")
 
 # Create the problem
-problem = get_problem(20, 1, 2, problem_class=ProblemClass.BBOB)
+problem = get_problem(1, 1, 2, problem_class=ProblemClass.BBOB)
 
 # Define a function to evaluate the BBOB function
 def evaluate_function(x):
