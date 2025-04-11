@@ -1,0 +1,16 @@
+{
+	"version": "0.3.18", 
+	"suite": "unknown_suite", 
+	"function_id": 1, 
+	"function_name": "Sphere", 
+	"maximization": false, 
+	"algorithm": {"name": "Vanilla BO Run 7", "info": "Bo-Torch Implementation"},
+	"attributes": ["evaluations", "raw_y", "raw_y_best"],
+	"scenarios": [
+		{"dimension": 2,
+		"path": "data_f1_Sphere/IOHprofiler_f1_DIM2.dat",
+		"runs": [
+			{"instance": 7, "evals": 100, "best": {"evals": 100, "y": 0.0006069642351142382, "x": [-0.09793423995260017, 0.24066128495612313]}}
+		]}
+	]
+}
